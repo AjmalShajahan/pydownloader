@@ -9,11 +9,8 @@ def download(url,filename="test.txt",headers={"User-Agent":"Mozilla/5.0 (X11; Ub
     page=requests.get(url,headers=headers)
     content=page.content
 
-    file=open(filename,"wb")
-
-    file.write(content)
-
-    file.close()
+    with open(filename,"wb") as file:
+        file.write(content)
 
     fileInfo={
         "part":part,
@@ -42,7 +39,7 @@ def downloader(url,count_workers,filename="",extension=""):
 
     if filename=='':
         filename=urllib.parse.unquote(os.path.basename(readableurl.path))
-        
+
 
     if extension=='':
         extension = os.path.splitext(filename)[1]
@@ -60,7 +57,7 @@ def downloader(url,count_workers,filename="",extension=""):
     results=[]
     workers=[]
 
-    while count_workers>0 :
+    while count_workers>0:
         parts+=1
 
         if count_workers==0 and final_chunk>0 :
@@ -69,10 +66,10 @@ def downloader(url,count_workers,filename="",extension=""):
             end=start+chunk_len
 
         headers={"User-Agent":"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:95.0) Gecko/20100101 Firefox/95.0","Range":f"bytes={start}-{end}"}
-        chunkName=str_generator()+f"-part{parts}.{extension}"
-        
+        chunkName = f"{str_generator()}-part{parts}.{extension}"
+
         worker=threading.Thread(target=download,args=(url,chunkName,headers,results,parts))
-    
+
         workers.append(worker)
         worker.start()
         start+=chunk_len+1
@@ -82,23 +79,23 @@ def downloader(url,count_workers,filename="",extension=""):
 
     for workerTrade in workers :
         workerTrade.join()
-        
+
 
     newlist = sorted(results, key=operator.itemgetter("part")) 
 
     orgFile=open(filename,'ab+')
 
     for chunk in newlist :
-        
+
         partial=open(chunk['file_name'],'rb')
         partialContent=partial.read()
         orgFile.write(partialContent)
         partial.close
         os.unlink(chunk['file_name'])
-    
+
 
     orgFile.close   
-        
+
     response={
         "file_name":filename
     }
